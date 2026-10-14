@@ -1,0 +1,148 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Registered traveler or business host profile",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 120 },
+        "photoURL": { "type": "string", "maxLength": 500 },
+        "role": { "type": "string", "enum": ["traveler", "host", "admin"], "maxLength": 20 },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["uid", "email"]
+    },
+    "Booking": {
+      "title": "Booking",
+      "description": "Traveler booking request for stays or experiences",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "itemId": { "type": "string", "maxLength": 128 },
+        "itemType": { "type": "string", "enum": ["stay", "experience", "business", "guide", "tour"], "maxLength": 30 },
+        "title": { "type": "string", "maxLength": 150 },
+        "guestName": { "type": "string", "maxLength": 100 },
+        "guestEmail": { "type": "string", "maxLength": 120 },
+        "guestPhone": { "type": "string", "maxLength": 30 },
+        "startDate": { "type": "string", "maxLength": 30 },
+        "endDate": { "type": "string", "maxLength": 30 },
+        "guestsCount": { "type": "number" },
+        "totalAmount": { "type": "number" },
+        "specialRequests": { "type": "string", "maxLength": 1000 },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "cancelled"], "maxLength": 20 },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["userId", "itemId", "itemType", "title", "guestName", "guestEmail", "status"]
+    },
+    "Business": {
+      "title": "Business",
+      "description": "Local tourism business, guide, or handicraft cooperative listing",
+      "type": "object",
+      "properties": {
+        "ownerId": { "type": "string", "maxLength": 128 },
+        "businessName": { "type": "string", "maxLength": 150 },
+        "category": { "type": "string", "enum": ["guide", "handicraft", "culinary", "homestay", "transport"], "maxLength": 40 },
+        "state": { "type": "string", "maxLength": 60 },
+        "city": { "type": "string", "maxLength": 80 },
+        "contactEmail": { "type": "string", "maxLength": 120 },
+        "contactPhone": { "type": "string", "maxLength": 30 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "verified": { "type": "boolean" },
+        "approvalStatus": { "type": "string", "enum": ["pending", "approved", "rejected"], "maxLength": 20 },
+        "availabilityStatus": { "type": "string", "enum": ["available", "busy", "seasonal"], "maxLength": 20 },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["ownerId", "businessName", "category", "state", "city", "contactEmail"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Traveler review and rating for destinations, stays, or experiences",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128 },
+        "targetId": { "type": "string", "maxLength": 128 },
+        "targetType": { "type": "string", "enum": ["destination", "stay", "experience", "business"], "maxLength": 30 },
+        "authorName": { "type": "string", "maxLength": 100 },
+        "rating": { "type": "number" },
+        "comment": { "type": "string", "maxLength": 1500 },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["userId", "targetId", "authorName", "rating", "comment"]
+    },
+    "TourGuide": {
+      "title": "TourGuide",
+      "description": "Local tour guide listing with regional specialisations and contact options",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "displayName": { "type": "string", "maxLength": 100 },
+        "profileImage": { "type": "string", "maxLength": 500 },
+        "shortBio": { "type": "string", "maxLength": 300 },
+        "fullBio": { "type": "string", "maxLength": 3000 },
+        "state": { "type": "string", "maxLength": 60 },
+        "city": { "type": "string", "maxLength": 80 },
+        "yearsOfExperience": { "type": "number" },
+        "pricePerTour": { "type": "number" },
+        "pricePerHour": { "type": "number" },
+        "contactPhone": { "type": "string", "maxLength": 30 },
+        "contactEmail": { "type": "string", "maxLength": 120 },
+        "preferredContactMethod": { "type": "string", "enum": ["enquiry_form", "phone", "email", "whatsapp"], "maxLength": 30 },
+        "availabilityInformation": { "type": "string", "maxLength": 500 },
+        "verificationStatus": { "type": "string", "enum": ["verified", "unverified", "pending_review"], "maxLength": 30 },
+        "listingStatus": { "type": "string", "enum": ["published", "pending_review", "rejected", "sample"], "maxLength": 30 },
+        "isSampleData": { "type": "boolean" },
+        "createdAt": { "type": "string", "maxLength": 50 },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["displayName", "state", "city", "verificationStatus", "listingStatus"]
+    },
+    "TourEnquiry": {
+      "title": "TourEnquiry",
+      "description": "Tourist booking enquiry submitted to a local tour guide",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "guideId": { "type": "string", "maxLength": 128 },
+        "touristUserId": { "type": "string", "maxLength": 128 },
+        "touristName": { "type": "string", "maxLength": 100 },
+        "destinationId": { "type": "string", "maxLength": 128 },
+        "requestedDate": { "type": "string", "maxLength": 30 },
+        "groupSize": { "type": "number" },
+        "preferredLanguage": { "type": "string", "maxLength": 50 },
+        "message": { "type": "string", "maxLength": 2000 },
+        "status": { "type": "string", "enum": ["Pending", "Accepted", "Declined", "Cancelled"], "maxLength": 20 },
+        "createdAt": { "type": "string", "maxLength": 50 },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["guideId", "touristName", "destinationId", "requestedDate", "groupSize", "status"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "User" },
+      "description": "User profile records indexed by auth UID"
+    },
+    "/bookings/{bookingId}": {
+      "schema": { "$ref": "Booking" },
+      "description": "Travel booking and inquiry requests"
+    },
+    "/businesses/{businessId}": {
+      "schema": { "$ref": "Business" },
+      "description": "Community submitted local tourism business directory"
+    },
+    "/reviews/{reviewId}": {
+      "schema": { "$ref": "Review" },
+      "description": "Traveler reviews for destinations, stays, and activities"
+    },
+    "/tourGuides/{guideId}": {
+      "schema": { "$ref": "TourGuide" },
+      "description": "Local tour guide directory listings and credentials"
+    },
+    "/tourEnquiries/{enquiryId}": {
+      "schema": { "$ref": "TourEnquiry" },
+      "description": "Direct tour enquiry requests between tourists and local guides"
+    }
+  }
+}

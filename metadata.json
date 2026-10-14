@@ -1,0 +1,6 @@
+{
+  "name": "BharatExplore",
+  "description": "One India. Endless Experiences. Discover tourist destinations, cultural heritage, homestays, local businesses, and interactive maps across India.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

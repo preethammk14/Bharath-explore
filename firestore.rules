@@ -1,0 +1,132 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email'])
+        && data.uid is string && data.uid.size() <= 128
+        && data.email is string && data.email.size() <= 120
+        && (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100))
+        && (!('role' in data) || (data.role in ['traveler', 'host', 'admin']))
+        && data.uid == request.auth.uid;
+    }
+
+    function isValidBooking(data) {
+      return data.keys().hasAll(['userId', 'itemId', 'itemType', 'title', 'guestName', 'guestEmail', 'status'])
+        && data.userId is string && data.userId.size() <= 128
+        && data.itemId is string && data.itemId.size() <= 128
+        && data.itemType in ['stay', 'experience', 'business', 'guide', 'tour']
+        && data.title is string && data.title.size() <= 150
+        && data.guestName is string && data.guestName.size() <= 100
+        && data.guestEmail is string && data.guestEmail.size() <= 120
+        && data.status in ['pending', 'confirmed', 'cancelled']
+        && data.userId == request.auth.uid;
+    }
+
+    function isValidBusiness(data) {
+      return data.keys().hasAll(['ownerId', 'businessName', 'category', 'state', 'city', 'contactEmail'])
+        && data.ownerId is string && data.ownerId.size() <= 128
+        && data.businessName is string && data.businessName.size() <= 150
+        && data.category in ['guide', 'handicraft', 'culinary', 'homestay', 'transport', 'Certified Tour Guide', 'Handicraft Cooperative', 'Artisan Workshop', 'Regional Cuisine', 'Heritage Transport']
+        && data.state is string && data.state.size() <= 100
+        && data.city is string && data.city.size() <= 100
+        && data.contactEmail is string && data.contactEmail.size() <= 120
+        && (!('approvalStatus' in data) || data.approvalStatus in ['pending', 'approved', 'rejected'])
+        && (!('availabilityStatus' in data) || data.availabilityStatus in ['available', 'busy', 'seasonal'])
+        && data.ownerId == request.auth.uid;
+    }
+
+    function isValidReview(data) {
+      return data.keys().hasAll(['userId', 'targetId', 'authorName', 'rating', 'comment'])
+        && data.userId is string && data.userId.size() <= 128
+        && data.targetId is string && data.targetId.size() <= 128
+        && data.authorName is string && data.authorName.size() <= 100
+        && data.rating is number && data.rating >= 1 && data.rating <= 5
+        && data.comment is string && data.comment.size() <= 1500
+        && data.userId == request.auth.uid;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId);
+      allow create: if isSignedIn() && request.auth.uid == userId && isValidUser(incoming());
+      allow update: if isSignedIn() && request.auth.uid == userId && isValidUser(incoming())
+                    && incoming().uid == existing().uid;
+      allow delete: if false;
+    }
+
+    // Bookings collection
+    match /bookings/{bookingId} {
+      allow get: if isSignedIn() && isValidId(bookingId) && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidId(bookingId) && isValidBooking(incoming());
+      allow update: if isSignedIn() && isValidId(bookingId)
+                    && resource.data.userId == request.auth.uid
+                    && incoming().userId == existing().userId
+                    && isValidBooking(incoming())
+                    && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'specialRequests']);
+      allow delete: if isSignedIn() && isValidId(bookingId) && resource.data.userId == request.auth.uid;
+    }
+
+    // Businesses collection
+    match /businesses/{businessId} {
+      allow get: if isValidId(businessId);
+      allow list: if true;
+      allow create: if isSignedIn() && isValidId(businessId) && isValidBusiness(incoming());
+      allow update: if isSignedIn() && isValidId(businessId)
+                    && (resource.data.ownerId == request.auth.uid || request.auth.token.email.matches('.*admin.*') || (request.auth.token.keys().hasAll(['role']) && request.auth.token.role == 'admin'))
+                    && incoming().ownerId == existing().ownerId;
+      allow delete: if isSignedIn() && isValidId(businessId) 
+                    && (resource.data.ownerId == request.auth.uid || request.auth.token.email.matches('.*admin.*') || (request.auth.token.keys().hasAll(['role']) && request.auth.token.role == 'admin'));
+    }
+
+    // Reviews collection
+    match /reviews/{reviewId} {
+      allow get: if isValidId(reviewId);
+      allow list: if true;
+      allow create: if isSignedIn() && isValidId(reviewId) && isValidReview(incoming());
+      allow update: if isSignedIn() && isValidId(reviewId)
+                    && resource.data.userId == request.auth.uid
+                    && incoming().userId == existing().userId
+                    && isValidReview(incoming());
+      allow delete: if isSignedIn() && isValidId(reviewId) && resource.data.userId == request.auth.uid;
+    }
+
+    // Tour Guides collection
+    match /tourGuides/{guideId} {
+      allow get, list: if true;
+      allow create: if isSignedIn() && isValidId(guideId);
+      allow update: if isSignedIn() && isValidId(guideId);
+      allow delete: if isSignedIn() && isValidId(guideId);
+    }
+
+    // Tour Enquiries collection
+    match /tourEnquiries/{enquiryId} {
+      allow create: if isValidId(enquiryId);
+      allow get, list: if isSignedIn() && isValidId(enquiryId);
+      allow update: if isSignedIn() && isValidId(enquiryId);
+      allow delete: if isSignedIn() && isValidId(enquiryId);
+    }
+  }
+}
